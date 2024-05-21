@@ -13,57 +13,31 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class CreaterUserScreen extends StatefulWidget {
-  const CreaterUserScreen({Key? key}) : super(key: key);
+class UserScreen extends StatefulWidget {
+  Usuario usuario;
+  UserScreen(this.usuario,{Key? key}) : super(key: key);
 
   @override
-  State<CreaterUserScreen> createState() => _CreaterUserScreenState();
+  State<UserScreen> createState() => _UserScreenState(usuario);
 }
 
-class _CreaterUserScreenState extends State<CreaterUserScreen> {
-  String _mail = "";
+class _UserScreenState extends State<UserScreen> {
+  Usuario usuario;
   String _nombre = "";
   String _password = "";
   String _fecha = "";
   String _direccion = "";
   final _formKey = GlobalKey<FormState>();
 
-  Widget _eMailInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Mail',
-          hintText: 'nombre@mail',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Mail vacio';
-            
-          }
-          if(!value.contains('@')){
-            return 'Mail incorrecto';
-
-          }
-          setState(()  {
-            _mail = value;
-          });
-          return null;
-        },
-      ),
-    );
-  }
+  _UserScreenState(this.usuario);
 
   Widget _nombreInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
+        controller: TextEditingController(text: usuario.nombre,),
         decoration: InputDecoration(
           labelText: 'Nombre usuario',
-          hintText: 'escribe tu nombre aqui',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -85,9 +59,9 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
+        controller: TextEditingController(text: usuario.fecha,),
         decoration: InputDecoration(
           labelText: 'Fecha nacimiento',
-          hintText: '00-00-0000',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -113,9 +87,9 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
+        controller: TextEditingController(text: usuario.direccion,),
         decoration: InputDecoration(
           labelText: 'Direccion',
-          hintText: 'Escribe tu direccion aqui',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -139,9 +113,9 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
       child: TextFormField(
         obscureText: true,
         obscuringCharacter: '*',
+        controller: TextEditingController(text: usuario.password,),
         decoration: InputDecoration(
-          labelText: 'Escribe tu contraseña',
-          hintText: 'Password',
+          labelText: 'Nueva contraseña',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -162,26 +136,60 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
-  Widget _creatingButton(){
+  Widget _CambioButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
       alignment: Alignment.center,
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
-          child: const Text('Registrar', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          child: const Text('Aplicar cambios', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () async{
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
               );
-              List<Ronda> rondas = [];
-              List<Amigo> amigos = [];
-              Usuario usuario = Usuario(_mail,_nombre,_password,"no",_fecha,_direccion,"",rondas,amigos);
-              String mensaje = await crearUsuario(usuario);
+              usuario.nombre = _nombre;
+              usuario.fecha = _fecha;
+              usuario.direccion = _direccion;
+              usuario.password =_password;
+              String mensaje = await modificarUsuario(usuario);
               if(mensaje == "OK"){
                 _savePreferences();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('usuario creado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
+                  const SnackBar(content: Text('usuario modificado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
+                );
+              } else{
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
+                );
+              }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Error, usuario incorrecto', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
+              );
+            }
+          }
+      ),
+    );
+  }
+
+  Widget _DeleteButton(){
+    return Container(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      alignment: Alignment.center,
+      child: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
+          child: const Text('Borrar Usuario', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          onPressed: () async{
+            if(_formKey.currentState!.validate()){
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
+              );
+              String mensaje = await borrarUsuario(usuario);
+              if(mensaje == "OK"){
+                _savePreferences();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('usuario borrado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
               } else{
@@ -230,13 +238,23 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                _eMailInput(),
                 _nombreInput(),
                 _fechaInput(),
                 _direccionInput(),
                 _passwordInput(),
-                _creatingButton(),
-                _volverButton()
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: _CambioButton()
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0, right: 4.0),
+                      child: _DeleteButton()
+                    ),
+                  ],
+                )
               ],
             ),
           )
@@ -245,12 +263,35 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
   }
 
   void _savePreferences() async {
-    SharedPreferencesManager.save(_mail,_password );
+    SharedPreferencesManager.save(usuario.mail,_password );
   }
 
-  Future<String> crearUsuario(Usuario usuario) async {
+  Future<String> modificarUsuario(Usuario usuario) async {
     final response = await http.post(
       Uri.parse('?action=postUsuario'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, Usuario>{
+        'usuario': usuario,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      Map<String, dynamic> json = jsonDecode(response.body);
+      // If the server did return a 201 CREATED response,
+      // then parse the JSON.
+      return json["mensaje"];
+    } else {
+      // If the server did not return a 201 CREATED response,
+      // then throw an exception.
+      throw Exception('Fallo al acceder a la api');
+    }
+  }
+
+  Future<String> borrarUsuario(Usuario usuario) async {
+    final response = await http.post(
+      Uri.parse('?action=deleteUsuario&mail='+usuario.mail),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

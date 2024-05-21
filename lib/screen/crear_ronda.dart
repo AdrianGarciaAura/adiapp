@@ -1,6 +1,9 @@
 import 'dart:ffi';
 
+import 'package:adiapp/model/participante.dart';
+import 'package:adiapp/screen/usuario_rondas.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
@@ -13,57 +16,34 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class CreaterUserScreen extends StatefulWidget {
-  const CreaterUserScreen({Key? key}) : super(key: key);
+class CreaterRondaScreen extends StatefulWidget {
+  Usuario usuario;
+  CreaterRondaScreen(this.usuario,{Key? key}) : super(key: key);
 
   @override
-  State<CreaterUserScreen> createState() => _CreaterUserScreenState();
+  State<CreaterRondaScreen> createState() => _CreaterRondaScreenState(usuario,DateTime.now());
 }
 
-class _CreaterUserScreenState extends State<CreaterUserScreen> {
-  String _mail = "";
+class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
+  Usuario usuario;
   String _nombre = "";
-  String _password = "";
-  String _fecha = "";
-  String _direccion = "";
+  String _tipo = "";
+  DateTime _fechaMaxima ;
+  String _entrega = "";
+  String _dinero = "";
+  List<String> listaTipo = <String>["ADistancia","Presencial"];
+
   final _formKey = GlobalKey<FormState>();
 
-  Widget _eMailInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Mail',
-          hintText: 'nombre@mail',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Mail vacio';
-            
-          }
-          if(!value.contains('@')){
-            return 'Mail incorrecto';
-
-          }
-          setState(()  {
-            _mail = value;
-          });
-          return null;
-        },
-      ),
-    );
-  }
+  _CreaterRondaScreenState(this.usuario, this._fechaMaxima);
 
   Widget _nombreInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
         decoration: InputDecoration(
-          labelText: 'Nombre usuario',
-          hintText: 'escribe tu nombre aqui',
+          labelText: 'Nombre ronda',
+          hintText: 'escribe el nombre de la ronda aqui',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -81,82 +61,106 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  Widget _entregaInput(){
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: 'Entrega',
+          hintText: 'Lugar de Entrega(Solo en presencial)',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+        ),
+        validator: (value){
+          if(value == null || value.isEmpty){
+            return 'Entrega vacio';
+          }
+          setState(()  {
+            _entrega = value;
+          });
+          return null;
+        },
+      ),
+    );
+  }
+
+  List<String> listaDeOpciones = <String>["A","B","C","D","E","F","G"];
+
+  Widget _tipoInput(){
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.0),
+      child: DropdownButtonFormField(
+        items: listaTipo.map((e){
+          return DropdownMenuItem(
+            child: SizedBox(
+              width: double.infinity,
+              child: Text(
+                e,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            value: e,
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(()  {
+            _tipo = value!;
+          });
+        },
+        isDense: true,
+        isExpanded: true,
+      ),
+    );
+  }
+
+  Widget _dineroInput(){
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        keyboardType: TextInputType.number,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+        ],
+        decoration: InputDecoration(
+          labelText: 'Dinero maximo',
+          hintText: '000',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+        ),
+        validator: (value){
+          if(value == null || value.isEmpty){
+            return 'dinero vacio';
+          }
+          setState(()  {
+            _dinero = value;
+          });
+          return null;
+        },
+      ),
+    );
+  }
+
   Widget _fechaInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Fecha nacimiento',
-          hintText: '00-00-0000',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Fecha vacia';
-          }
-          if(value.indexOf('-') != 2 || value.indexOf('-',3) != 5){
-            return 'Fecha incorrecta';
-
-          }
-          setState(()  {
-            _fecha = value;
+      child: InputDatePickerFormField(
+        firstDate: DateTime.now(),
+        lastDate: DateTime(DateTime.now().year + 100),
+        fieldHintText: 'Fecha maxima entrega',
+        fieldLabelText: '${_fechaMaxima}',
+        errorFormatText: 'Formato incorrecto',
+        errorInvalidText: 'Fecha incorrecta',
+        onDateSubmitted: (date) {
+          setState(() {
+            _fechaMaxima = date;
           });
-          return null;
         },
-      ),
-    );
-  }
-
-  Widget _direccionInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Direccion',
-          hintText: 'Escribe tu direccion aqui',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Direccion vacio';
-          }
-          setState(()  {
-            _direccion = value;
+        onDateSaved: (date) {
+          setState(() {
+            _fechaMaxima = date;
           });
-          return null;
-        },
-      ),
-    );
-  }
-
-  Widget _passwordInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        obscureText: true,
-        obscuringCharacter: '*',
-        decoration: InputDecoration(
-          labelText: 'Escribe tu contraseña',
-          hintText: 'Password',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Contraseña vacia';
-          }
-          if(value.length < 8){
-            return 'La contraseña debe tener 8 o mas caracteres';
-          }
-          setState(()  {
-            _password = value;
-          });
-          return null;
         },
       ),
     );
@@ -168,22 +172,21 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
       alignment: Alignment.center,
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
-          child: const Text('Registrar', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          child: const Text('Crear ronda', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () async{
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
               );
-              List<Ronda> rondas = [];
-              List<Amigo> amigos = [];
-              Usuario usuario = Usuario(_mail,_nombre,_password,"no",_fecha,_direccion,"",rondas,amigos);
-              String mensaje = await crearUsuario(usuario);
+              List<Participante> participantes = [];
+              Ronda ronda= Ronda('0',_nombre,usuario.nombre,usuario.mail,0,
+                  _tipo,"",_entrega,_fechaMaxima.toString(),int.parse(_dinero),'Empezando',participantes);;
+              String mensaje = await crearRonda(ronda);
               if(mensaje == "OK"){
-                _savePreferences();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('usuario creado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
+                  const SnackBar(content: Text('ronda creada correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
+                //Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
               } else{
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
@@ -207,7 +210,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('volver', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
           }
       ),
     );
@@ -216,7 +219,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registro'),
+      appBar: AppBar(title: const Text('Crear Ronda'),
         backgroundColor: Colors.blue.shade400,
         titleTextStyle: TextStyle(
             color: Colors.white,
@@ -230,11 +233,12 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                _eMailInput(),
                 _nombreInput(),
+                _tipoInput(),
+                _dineroInput(),
+                _entregaInput(),
+                Text(overflow: TextOverflow.ellipsis, 'Fecha entrega maxima',style: TextStyle(color: Colors.blue.shade400, fontSize: 10.0,)),
                 _fechaInput(),
-                _direccionInput(),
-                _passwordInput(),
                 _creatingButton(),
                 _volverButton()
               ],
@@ -244,18 +248,14 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
-  void _savePreferences() async {
-    SharedPreferencesManager.save(_mail,_password );
-  }
-
-  Future<String> crearUsuario(Usuario usuario) async {
+  Future<String> crearRonda(Ronda ronda) async {
     final response = await http.post(
-      Uri.parse('?action=postUsuario'),
+      Uri.parse('?action=postRonda'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(<String, Usuario>{
-        'usuario': usuario,
+      body: jsonEncode(<String, Ronda>{
+        'ronda': ronda,
       }),
     );
 
@@ -271,15 +271,4 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     }
   }
 
-}
-
-class SharedPreferencesManager {
-  static const user = 'user';
-  static const password = 'password';
-
-  static Future<void> save(String user,String password) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(SharedPreferencesManager.user, user);
-    prefs.setString(SharedPreferencesManager.password, password);
-  }
 }

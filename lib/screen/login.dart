@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:adiapp/model/datos_usuario.dart';
 import 'package:adiapp/screen/crear_usuario.dart';
+import 'package:adiapp/screen/usuario_rondas.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -87,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               DatosUsuario datos = await login(_user,_password);
               if(datos.mensaje == "ok"){
-                //Navigator.push(context, MaterialPageRoute(builder: (context)=> AgendaScreen()));
+                Navigator.push(context,MaterialPageRoute(builder: (context) => UsuRondasScreen(datos.dato)));
               } else{
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(datos.mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
