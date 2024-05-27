@@ -180,9 +180,11 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
               );
               List<Participante> participantes = [];
               Ronda ronda= Ronda('0',_nombre,usuario.nombre,usuario.mail,0,
-                  _tipo,"",_entrega,_fechaMaxima.toString(),int.parse(_dinero),'Empezando',participantes);;
+                  _tipo,"",_entrega,_fechaMaxima.toString(),int.parse(_dinero),'Empezando',participantes);
               String mensaje = await crearRonda(ronda);
-              if(mensaje == "OK"){
+              if(mensaje.substring(0,2) == "OK"){
+                ronda.id = mensaje.substring(2);
+                usuario.rondas.add(ronda);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('ronda creada correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );

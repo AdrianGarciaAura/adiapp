@@ -187,7 +187,7 @@ class _UserScreenState extends State<UserScreen> {
               );
               String mensaje = await borrarUsuario(usuario);
               if(mensaje == "OK"){
-                _savePreferences();
+                SharedPreferencesManager.clearAll();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('usuario borrado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
@@ -207,20 +207,6 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  Widget _volverButton(){
-    return Container(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      alignment: Alignment.center,
-      child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
-          child: const Text('volver', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
-          }
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -230,6 +216,15 @@ class _UserScreenState extends State<UserScreen> {
             color: Colors.white,
             fontStyle: FontStyle.italic,
             fontSize: 24),
+        actions: [
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
+              child: const Text('volver', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
+              }
+          ),
+        ],
       ),
       body: Form(
           key: _formKey,
@@ -323,4 +318,10 @@ class SharedPreferencesManager {
     prefs.setString(SharedPreferencesManager.user, user);
     prefs.setString(SharedPreferencesManager.password, password);
   }
+
+  static Future<bool> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.clear();
+  }
+
 }

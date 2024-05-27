@@ -5,6 +5,7 @@ import 'package:adiapp/model/amigo.dart';
 import 'package:adiapp/screen/login.dart';
 
 import 'crear_ronda.dart';
+import 'datos_ronda.dart';
 import 'datos_usuario.dart';
 
 
@@ -40,7 +41,7 @@ class UsuRondasScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: _RondasListView(usuario.rondas)
+        body: _RondasListView(usuario)
 
 
     );
@@ -48,11 +49,12 @@ class UsuRondasScreen extends StatelessWidget {
 }
 
 class _RondasListView extends StatelessWidget {
-  final List<Ronda> _data;
-  _RondasListView(this._data);
+  Usuario usuario;
+  _RondasListView(this.usuario);
 
   @override
   Widget build(BuildContext context) {
+    List<Ronda> _data = usuario.rondas;
     return ListView.builder(
       itemCount: _data.length,
       itemBuilder: (context,index)=>
@@ -64,7 +66,7 @@ class _RondasListView extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       child: ListTile(
         tileColor: Colors.white,
-        //onTap: () => Navigator.push(context, MaterialPageRoute( builder: (context) => WeatherDetail(element) )),
+        onTap: () => Navigator.push(context, MaterialPageRoute( builder: (context) => RondaScreen(usuario,element.id,element.nombre))),
         trailing:  Text('${element.num} Part', style: TextStyle(color: Colors.blue.shade400, fontSize: 20.0,),),
         title: Text('${element.tipo}: ${element.nombre}', style: TextStyle(color: Colors.teal, fontSize: 15.0,),),
         subtitle: Text('gestionador: ${element.gestionador}, estado: ${element.estado}', style: TextStyle(color: Colors.blue.shade400, fontSize: 10.0,),),
