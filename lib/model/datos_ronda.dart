@@ -10,7 +10,14 @@ class DatosRonda {
   DatosRonda(this.mensaje,this.dato);
 
   factory DatosRonda.fromJson(Map<String, dynamic> json){
-    Ronda dato = Ronda.fromMap(json["dato"]);
+    print("descodificando inicio");
+    Ronda dato = Ronda("", "", "", "", 0, "", "", "", "", 0, "", []);
+    print("antes de ver mensaje");
+    if(json["mensaje"] == 'ok') {
+      print("antes de descodificar ronda");
+      dato = Ronda.fromMap(json["dato"]);
+    }
+    print("devuelve resultado descodificacion");
     return DatosRonda(json["mensaje"], dato);
   }
 }

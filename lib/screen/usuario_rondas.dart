@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
-import 'package:adiapp/model/amigo.dart';
-import 'package:adiapp/screen/login.dart';
-
 import 'crear_ronda.dart';
 import 'datos_ronda.dart';
+import 'ronda_part.dart';
 import 'datos_usuario.dart';
-
 
 class UsuRondasScreen extends StatelessWidget {
   Usuario usuario;
@@ -25,19 +22,17 @@ class UsuRondasScreen extends StatelessWidget {
               fontStyle: FontStyle.italic,
               fontSize: 24),
           actions: [
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: const Text('Configuracion usuario', style: TextStyle(color: Colors.blue, fontSize: 15.0,)),
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> UserScreen(usuario)));
-                }
+            IconButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> UserScreen(usuario)));
+              },
+              icon: Icon(Icons.settings,color: Colors.white),
             ),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: const Text('Crear ronda', style: TextStyle(color: Colors.blue, fontSize: 15.0,)),
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> CreaterRondaScreen(usuario)));
-                }
+            IconButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> CreaterRondaScreen(usuario)));
+              },
+              icon: Icon(Icons.add,color: Colors.white),
             ),
           ],
         ),

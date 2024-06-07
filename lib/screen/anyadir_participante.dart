@@ -1,21 +1,14 @@
 import 'dart:convert';
-import 'dart:js';
-
-import 'package:adiapp/screen/usuario_rondas.dart';
 import 'package:flutter/material.dart';
 import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
-import 'package:adiapp/model/amigo.dart';
-import 'package:adiapp/screen/login.dart';
 import 'package:http/http.dart' as http;
-import '../model/datos_amigo.dart';
-import '../model/datos_ronda.dart';
 import '../model/partCompleto.dart';
 import '../model/participante.dart';
-import 'crear_ronda.dart';
-import 'datos_amigo.dart';
 import 'datos_ronda.dart';
-import 'datos_usuario.dart';
+import 'ronda_part.dart';
+
+const String _link = 'https://script.google.com/macros/s/AKfycbxNgjyhiPFrCClFNNpJGCtplx47T9VWtvo2Bh3KTKBKCY_z0_-uiUMb774PGauAPztzwA/exec';
 
 class ParticipanteScreen extends StatefulWidget {
   Usuario usuario;
@@ -48,17 +41,16 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
               fontStyle: FontStyle.italic,
               fontSize: 24),
           actions: [
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: const Text('Volver', style: TextStyle(color: Colors.blue, fontSize: 15.0,)),
+            IconButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaScreen(usuario,ronda.id,ronda.nombre)));
-                }
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaParticipanteScreen(usuario,ronda)));
+                },
+              icon: Icon(Icons.arrow_back,color: Colors.white),
             ),
           ],
         ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        body: ListView(
+          padding: const EdgeInsets.all(8),
           children: <Widget>[
             Form(
                 key: _formKey,
@@ -69,35 +61,14 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
                     children: <Widget>[
                       _nombreInput(),
                       _eMailInput(),
-                      Text(overflow: TextOverflow.ellipsis, 'Para añadir o eliminar algun participante, poner sus datos',style: TextStyle(color: Colors.blue.shade400, fontSize: 10.0,)),
+                      Text(overflow: TextOverflow.ellipsis, 'Pon datos particicipantes para:',style: TextStyle(color: Colors.blue.shade400, fontSize: 20.0,)),
                       _botones(context),
                     ],
                   ),
                 )
             ),
-            ListView.builder(
-              itemCount: _data.length,
-              itemBuilder: (context, index) => _listItem(context, _data[index]),
-            ),
           ],
         )
-    );
-  }
-
-  Widget _listItem(BuildContext context, Participante element) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: ListTile(
-        tileColor: Colors.white,
-        title: Text('${element.nombre}', style: TextStyle(
-          color: Colors.teal, fontSize: 15.0,),),
-        subtitle: Text('estado A.D.I: ${element.adi}', style: TextStyle(
-          color: Colors.blue.shade400, fontSize: 10.0,),),
-        shape: RoundedRectangleBorder(
-            side: const BorderSide(color: Colors.blue),
-            borderRadius: BorderRadius.circular(20.0)
-        ),
-      ),
     );
   }
 
@@ -109,7 +80,7 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
             padding: const EdgeInsets.only(right: 4.0),
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: const Text('Añadir participante', style: TextStyle(
+                child: const Text('Añadir', style: TextStyle(
                   color: Colors.blue, fontSize: 15.0,)),
                 onPressed: () async{
                   if(_formKey.currentState!.validate()){
@@ -117,15 +88,19 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
                       const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
                     );
                     ParticipanteCompl part = ParticipanteCompl(_nombre,_mail,'','','','nulo','no seleccionado');
-                    String mensaje = await anyadirParticipante(part, ronda.id);
+                    String? mensaje = await anyadirParticipante(part, ronda.id);
                     if(mensaje == "OK"){
+                      ronda.participantes.add(Participante(part.nombre, part.mail, part.adi));
+                      ronda.num = ronda.num+1;
+                      usuario.rondas.removeWhere((rond) => rond.id == ronda.id);
+                      usuario.rondas.add(ronda);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('participante añadido correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                       );
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaScreen(usuario,ronda.id,ronda.nombre)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaParticipanteScreen(usuario,ronda)));
                     } else{
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
+                        SnackBar(content: Text(mensaje!, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
                       );
                     }
                   } else {
@@ -140,7 +115,7 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
             padding: const EdgeInsets.only(right: 4.0),
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: const Text('Eliminar articipante', style: TextStyle(
+                child: const Text('Eliminar', style: TextStyle(
                   color: Colors.blue, fontSize: 15.0,)),
                 onPressed: () async{
                   if(_formKey.currentState!.validate()){
@@ -148,15 +123,19 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
                       const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
                     );
                     ParticipanteCompl part = ParticipanteCompl(_nombre,_mail,'','','','nulo','no seleccionado');
-                    String mensaje = await deleteParticipante(part, ronda.id);
+                    String? mensaje = await deleteParticipante(part, ronda.id);
                     if(mensaje == "OK"){
+                      ronda.participantes.removeWhere((parti) => parti.mail == part.mail);
+                      ronda.num = ronda.num-1;
+                      usuario.rondas.removeWhere((rond) => rond.id == ronda.id);
+                      usuario.rondas.add(ronda);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('participante eliminado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                       );
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaScreen(usuario,ronda.id,ronda.nombre)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaParticipanteScreen(usuario,ronda)));
                     } else{
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
+                        SnackBar(content: Text(mensaje!, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
                       );
                     }
                   } else {
@@ -193,7 +172,7 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
 
           }
           setState(()  {
-            _mail = value;
+            _mail = value.trim();
           });
           return null;
         },
@@ -217,7 +196,7 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
             return 'Nombre vacio';
           }
           setState(()  {
-            _nombre = value;
+            _nombre = value.trim();
           });
           return null;
         },
@@ -225,49 +204,75 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
     );
   }
 
-  Future<String> anyadirParticipante(ParticipanteCompl participante,String idRonda) async {
+  Future<String?> anyadirParticipante(ParticipanteCompl participante,String idRonda) async {
     final response = await http.post(
-      Uri.parse('?action=postParticipante&idronda='+idRonda),
+      Uri.parse(_link+'?action=postParticipante&idronda='+idRonda),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(<String, ParticipanteCompl>{
-        'participante': participante,
-      }),
+      body: jsonEncode({'participante': participante},
+          toEncodable: (Object? value) => value is ParticipanteCompl
+              ? ParticipanteCompl.toJson(value)
+              : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
       // If the server did return a 201 CREATED response,
       // then parse the JSON.
       return json["mensaje"];
+    } else if (response.statusCode == 302) {
+      if (response.headers.containsKey("location")) {
+        String? url = response.headers["location"];
+        final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
+        if (getResponse.statusCode == 200) {
+          Map<String, dynamic> json = jsonDecode(getResponse.body);
+          return json["mensaje"];
+        } else {
+          throw Exception(
+              'Fallo al acceder a la api' + getResponse.statusCode.toString());
+        }
+      }
     } else {
       // If the server did not return a 201 CREATED response,
       // then throw an exception.
-      throw Exception('Fallo al acceder a la api');
+      throw Exception('Fallo al acceder a la api' + response.statusCode.toString());
     }
   }
 
-  Future<String> deleteParticipante(ParticipanteCompl participante,String idRonda) async {
+  Future<String?> deleteParticipante(ParticipanteCompl participante,String idRonda) async {
     final response = await http.post(
-      Uri.parse('?action=deleteParticipante&idronda='+idRonda),
+      Uri.parse(_link+'?action=deleteParticipante&idronda='+idRonda),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(<String, ParticipanteCompl>{
-        'participante': participante,
-      }),
+      body: jsonEncode({'participante': participante},
+          toEncodable: (Object? value) => value is ParticipanteCompl
+              ? ParticipanteCompl.toJson(value)
+              : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
       // If the server did return a 201 CREATED response,
       // then parse the JSON.
       return json["mensaje"];
+    } else if (response.statusCode == 302) {
+      if (response.headers.containsKey("location")) {
+        String? url = response.headers["location"];
+        final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
+        if (getResponse.statusCode == 200) {
+          Map<String, dynamic> json = jsonDecode(getResponse.body);
+          return json["mensaje"];
+        } else {
+          throw Exception(
+              'Fallo al acceder a la api' + getResponse.statusCode.toString());
+        }
+      }
     } else {
       // If the server did not return a 201 CREATED response,
       // then throw an exception.
-      throw Exception('Fallo al acceder a la api');
+      throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
   }
 }

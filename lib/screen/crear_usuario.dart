@@ -1,17 +1,15 @@
 import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
 import 'package:adiapp/model/amigo.dart';
 import 'package:adiapp/screen/login.dart';
-
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
+const String _link = 'https://script.google.com/macros/s/AKfycbxNgjyhiPFrCClFNNpJGCtplx47T9VWtvo2Bh3KTKBKCY_z0_-uiUMb774PGauAPztzwA/exec';
 
 class CreaterUserScreen extends StatefulWidget {
   const CreaterUserScreen({Key? key}) : super(key: key);
@@ -49,7 +47,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
 
           }
           setState(()  {
-            _mail = value;
+            _mail = value.trim();
           });
           return null;
         },
@@ -73,7 +71,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
             return 'Nombre vacio';
           }
           setState(()  {
-            _nombre = value;
+            _nombre = value.trim();
           });
           return null;
         },
@@ -175,18 +173,17 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
                 const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
               );
               List<Ronda> rondas = [];
-              List<Amigo> amigos = [];
-              Usuario usuario = Usuario(_mail,_nombre,_password,"no",_fecha,_direccion,"",rondas,amigos);
-              String mensaje = await crearUsuario(usuario);
+              Usuario usuario = Usuario(_mail,_nombre,
+                  "Z"+_password,"no",_fecha,_direccion,"",rondas);
+              String? mensaje = await crearUsuario(usuario);
               if(mensaje == "OK"){
-                _savePreferences();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('usuario creado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
               } else{
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
+                  SnackBar(content: Text(mensaje!, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
                 );
               }
             } else {
@@ -217,69 +214,71 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Registro'),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade400,
         titleTextStyle: TextStyle(
             color: Colors.white,
             fontStyle: FontStyle.italic,
             fontSize: 24),
       ),
-      body: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _eMailInput(),
-                _nombreInput(),
-                _fechaInput(),
-                _direccionInput(),
-                _passwordInput(),
-                _creatingButton(),
-                _volverButton()
-              ],
-            ),
-          )
-      ),
+      body: ListView(
+        padding: const EdgeInsets.all(8),
+        children: <Widget>[
+          Form(
+              key: _formKey,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _eMailInput(),
+                    _nombreInput(),
+                    _fechaInput(),
+                    _direccionInput(),
+                    _passwordInput(),
+                    _creatingButton(),
+                    _volverButton()
+                  ],
+                ),
+              )
+          ),
+        ],
+      )
+
     );
   }
 
-  void _savePreferences() async {
-    SharedPreferencesManager.save(_mail,_password );
-  }
-
-  Future<String> crearUsuario(Usuario usuario) async {
+  Future<String?> crearUsuario(Usuario usuario) async {
     final response = await http.post(
-      Uri.parse('?action=postUsuario'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, Usuario>{
-        'usuario': usuario,
-      }),
+      Uri.parse(_link+'?action=postUsuario'),
+      headers: {'Content-type': 'application/json',
+        'Accept': 'application/json'},
+      body: jsonEncode({'usuario': usuario},
+          toEncodable: (Object? value) => value is Usuario
+              ? Usuario.toJson(value)
+              : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
       // If the server did return a 201 CREATED response,
       // then parse the JSON.
       return json["mensaje"];
+    } else if (response.statusCode == 302) {
+      if (response.headers.containsKey("location")) {
+        String? url = response.headers["location"];
+        final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
+        if (getResponse.statusCode == 200) {
+          Map<String, dynamic> json = jsonDecode(getResponse.body);
+          return json["mensaje"];
+        } else {
+          throw Exception(
+              'Fallo al acceder a la api' + getResponse.statusCode.toString());
+        }
+      }
     } else {
-      // If the server did not return a 201 CREATED response,
-      // then throw an exception.
-      throw Exception('Fallo al acceder a la api');
+      throw Exception('Fallo al acceder a la api '+response.statusCode.toString());
     }
   }
 
-}
-
-class SharedPreferencesManager {
-  static const user = 'user';
-  static const password = 'password';
-
-  static Future<void> save(String user,String password) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(SharedPreferencesManager.user, user);
-    prefs.setString(SharedPreferencesManager.password, password);
-  }
 }

@@ -21,9 +21,11 @@ class Ronda {
       this.tipo,this.fecha,this.entrega,this.fechaMaxima,this.dinero,this.estado,this.participantes);
 
   factory Ronda.fromMap(Map<String,dynamic> map){
+    print("dr inicio");
     List<dynamic> list = map["participantes"];
     List<Participante> participantes = list.map((element) => Participante.fromMap(element)).toList();
-    return Ronda(map['id'],
+    print("dr antes final");
+    return Ronda(map['id'].toString(),
           map['nombre'],
           map['gestionador'],
           map['mail'],
@@ -35,4 +37,18 @@ class Ronda {
           map['dinero'],
           map['estado'],participantes);
   }
+
+  factory Ronda.fromMapLite(Map<String,dynamic> map){
+    return Ronda(map['id'].toString(),
+        map['nombre'],
+        map['gestionador'], "",
+        map['num'],
+        map['tipo'], "", "", "", 0,
+        map['estado'],[]);
+  }
+
+  static Map<String, dynamic> toJson(Ronda value) =>
+      {'id': value.id, 'nombre': value.nombre, 'gestionador': value.gestionador, 'mail': value.mail, 'num': value.num,
+        'tipo': value.tipo, 'fecha': value.fecha, 'entrega': value.entrega,
+        'fechaMaxima': value.fechaMaxima, 'dinero': value.dinero, 'estado': value.estado, 'participantes': value.participantes};
 }

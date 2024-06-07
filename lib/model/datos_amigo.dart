@@ -12,7 +12,10 @@ class DatosAmigo {
   DatosAmigo(this.mensaje,this.dato);
 
   factory DatosAmigo.fromJson(Map<String, dynamic> json){
-    Amigo dato = Amigo.fromMap(json["dato"]);
+    Amigo dato = Amigo("", "", "", 0, "");
+    if(json["mensaje"] == 'ok') {
+      dato = Amigo.fromMap(json["dato"]);
+    }
     return DatosAmigo(json["mensaje"], dato);
   }
 }

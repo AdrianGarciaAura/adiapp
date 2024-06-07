@@ -1,13 +1,12 @@
-import 'dart:ffi';
-
 import 'package:adiapp/model/datos_usuario.dart';
 import 'package:adiapp/screen/crear_usuario.dart';
 import 'package:adiapp/screen/usuario_rondas.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:adiapp/model/usuario.dart';
 import 'dart:convert';
+
+const String _link = 'https://script.google.com/macros/s/AKfycbxNgjyhiPFrCClFNNpJGCtplx47T9VWtvo2Bh3KTKBKCY_z0_-uiUMb774PGauAPztzwA/exec';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -37,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return 'El mail no puede estar vacio.';
           }
           setState(()  {
-            _user = value;
+            _user = value.trim();
           });
           return null;
         },
@@ -66,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return 'Sorry, password length must be 8 characters or greater.';
           }
           setState(()  {
-          _password = value;
+          _password = value.trim();
           });
           return null;
         },
@@ -121,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _loadPreferences();
     return Scaffold(
       appBar: AppBar(title: const Text('Login'),
         automaticallyImplyLeading: false,
@@ -131,48 +129,43 @@ class _LoginScreenState extends State<LoginScreen> {
             fontStyle: FontStyle.italic,
             fontSize: 24),
       ),
-      body:Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _eMailInput(),
-                _passwordInput(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+      body: ListView(
+        padding: const EdgeInsets.all(8),
+        children: <Widget>[
+          Form(
+              key: _formKey,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4.0),
-                      child: _createrUserButton(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4.0),
-                      child: _loginButton(),
-                    ),
+                    _eMailInput(),
+                    _passwordInput(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4.0),
+                          child: _createrUserButton(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4.0),
+                          child: _loginButton(),
+                        ),
+                      ],
+                    )
                   ],
-                )
-              ],
-            ),
-          )
-      ),
+                ),
+              )
+          ),
+        ],
+      )
     );
-  }
-
-
-  void _loadPreferences() async{
-    final password = await SharedPreferencesManager.getPassword();
-    final user = await SharedPreferencesManager.getUser();
-    setState(()  {
-      _user = user!;
-      _password = password;
-    });
   }
 
   Future<DatosUsuario> login(mail,password) async {
     final response = await http
-        .get(Uri.parse('?action=login&mail='+mail+'&password='+password));
+        .get(Uri.parse(_link+'?action=login&mail='+mail+'&password=Z'+password));
     if (response.statusCode == 200) {
       return DatosUsuario.fromJson(jsonDecode(response.body));
     } else {
@@ -180,18 +173,4 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-}
-
-class SharedPreferencesManager {
-  static const user = 'user';
-  static const password = 'password';
-
-  static Future<String?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(SharedPreferencesManager.user);
-  }
-  static Future<String> getPassword() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(SharedPreferencesManager.password) ?? '';
-  }
 }
