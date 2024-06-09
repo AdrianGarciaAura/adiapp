@@ -8,7 +8,7 @@ import '../model/datos_amigo.dart';
 import 'datos_ronda.dart';
 import 'ronda_part.dart';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxNgjyhiPFrCClFNNpJGCtplx47T9VWtvo2Bh3KTKBKCY_z0_-uiUMb774PGauAPztzwA/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
 
 class AmigoScreen extends StatelessWidget {
