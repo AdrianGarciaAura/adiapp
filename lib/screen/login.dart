@@ -8,6 +8,7 @@ import 'dart:convert';
 
 const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
+//pantalla login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -20,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _password = "";
   final _formKey = GlobalKey<FormState>();
 
+  //widget para meter mail
   Widget _eMailInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -44,6 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //widget para meter contraseña
   Widget _passwordInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -73,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //boton para realizar el login
   Widget _loginButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -80,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Login', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          //metodo de login
           onPressed: () async{//empieza funcion
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
@@ -87,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               DatosUsuario datos = await login(_user,_password);
               if(datos.mensaje == "ok"){
+                //se va a las rondas del usuario
                 Navigator.push(context,MaterialPageRoute(builder: (context) => UsuRondasScreen(datos.dato)));
               } else{
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -104,6 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //boton crear usuario
   Widget _createrUserButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -112,15 +119,18 @@ class _LoginScreenState extends State<LoginScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Crear usuario', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () {
+            //se va a la creacion del usuario
             Navigator.push(context, MaterialPageRoute(builder: (context)=> CreaterUserScreen()));
           }
       ),
     );
   }
 
+  //construcion de widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //app bar
       appBar: AppBar(title: const Text('Login'),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade400,
@@ -132,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
+          //formulario login
           Form(
               key: _formKey,
               child: Padding(
@@ -163,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //llamada a la api de login
   Future<DatosUsuario> login(mail,password) async {
     final response = await http
         .get(Uri.parse(_link+'?action=login&mail='+mail+'&password=Z'+password));

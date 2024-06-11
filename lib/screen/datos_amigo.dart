@@ -10,15 +10,17 @@ import 'ronda_part.dart';
 
 const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
-
+//pantalla de amigo de la ronda
 class AmigoScreen extends StatelessWidget {
   Usuario usuario;
   Ronda ronda;
   AmigoScreen(this.usuario,this.ronda,{Key? key}) : super(key: key);
 
+  //se construye los widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //appbar con un boton de volver
       appBar: AppBar(
         title: Text('Ronda ' + ronda.nombre),
         automaticallyImplyLeading: false,
@@ -30,6 +32,7 @@ class AmigoScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
+              //se vuelve a los datos de la ronda
               Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaScreen(usuario,ronda.id,ronda.nombre)));
             },
             icon: Icon(Icons.arrow_back,color: Colors.white),
@@ -39,6 +42,7 @@ class AmigoScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
+          //se devuelve los datos del amigo cuando se reciban los datos de la api
           FutureBuilder<DatosAmigo>(
             future: getAmigo(ronda.id,usuario.mail),
             builder: (context, snapshot){
@@ -54,6 +58,7 @@ class AmigoScreen extends StatelessWidget {
     );
   }
 
+  //llamada a la api para recibir el amigo de la ronda
   Future<DatosAmigo> getAmigo(idRonda,mail) async {
     final response = await http
         .get(Uri.parse(_link+'?action=getAmigo&idronda='+idRonda+'&mail='+mail));
@@ -66,12 +71,14 @@ class AmigoScreen extends StatelessWidget {
 
 }
 
+//los datos del amigo
 class _AmigoScreenState extends StatelessWidget {
   DatosAmigo datosAmigo;
   Usuario usuario;
   Ronda ronda;
   _AmigoScreenState(this.datosAmigo,this.usuario,this.ronda);
 
+  //se construye la pantalla segun los datos recibidos
   @override
   Widget build(BuildContext context) {
     if(datosAmigo.mensaje == 'ok'){
@@ -90,6 +97,7 @@ class _AmigoScreenState extends StatelessWidget {
 
   }
 
+  //se construye los datos y botones relacionados con una ronda a distancia
   Widget _aDistancia(context,amigo) {
     if(ronda.tipo == 'ADistancia'){
       return Form(
@@ -103,6 +111,7 @@ class _AmigoScreenState extends StatelessWidget {
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                     child: Text('Confirmar Envio a ${amigo.nombre}', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+                    //metodo para confirmar un envio
                     onPressed: () async{
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Conectando...espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
@@ -111,6 +120,7 @@ class _AmigoScreenState extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
                       );
+                      //se recarga la pagina
                       Navigator.push(context, MaterialPageRoute(builder: (context)=> AmigoScreen(usuario,ronda)));
                     }
                 ),
@@ -123,6 +133,7 @@ class _AmigoScreenState extends StatelessWidget {
                       child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                           child: const Text('Confirmar Entrega', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+                          //metodo para confirmar una entrega
                           onPressed: () async{
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Conectando...espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
@@ -131,6 +142,7 @@ class _AmigoScreenState extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
                             );
+                            //se recarga la pagina
                             Navigator.push(context, MaterialPageRoute(builder: (context)=> AmigoScreen(usuario,ronda)));
                           }
                       ),
@@ -140,6 +152,7 @@ class _AmigoScreenState extends StatelessWidget {
                       child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                           child: const Text('Banear A.D.I', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+                          //metodo para banear a tu adi
                           onPressed: () async{
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Conectando...espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
@@ -148,6 +161,7 @@ class _AmigoScreenState extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(mensaje, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
                             );
+                            //se recarga la pagina
                             Navigator.push(context, MaterialPageRoute(builder: (context)=> AmigoScreen(usuario,ronda)));
                           }
                       ),
@@ -171,7 +185,7 @@ class _AmigoScreenState extends StatelessWidget {
 
 
 
-
+  //llamada a la api para confirmar envio
   Future<String> confEnv(idRonda,mail) async {
     final response = await http.get(Uri.parse(_link+'?action=confirmarEnvio&idronda='+idRonda+'&mail='+mail));
     if (response.statusCode == 200) {
@@ -182,6 +196,7 @@ class _AmigoScreenState extends StatelessWidget {
     }
   }
 
+  //llamada a la api para confirmar entrega
   Future<String> confEnt(idRonda,mail) async {
     final response = await http.get(Uri.parse(_link+'?action=confirmarEntrega&idronda='+idRonda+'&mail='+mail));
     if (response.statusCode == 200) {
@@ -192,6 +207,7 @@ class _AmigoScreenState extends StatelessWidget {
     }
   }
 
+  //llamada a la api para banear a tu adi
   Future<String> baneo(mail,idRonda) async {
     final response = await http.get(Uri.parse(_link+'?action=baneo&mail='+mail+'&idronda='+idRonda));
     if (response.statusCode == 200) {

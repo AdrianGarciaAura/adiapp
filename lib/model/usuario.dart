@@ -1,6 +1,5 @@
 import 'package:adiapp/model/ronda.dart';
-import 'package:adiapp/model/amigo.dart';
-
+//clase usuario
 class Usuario {
   String mail;
   String nombre;
@@ -13,9 +12,10 @@ class Usuario {
 
 
 
-
+  //constructor
   Usuario(this.mail,this.nombre,this.password,this.bloqueado,this.fecha,this.direccion,this.creacion,this.rondas);
 
+  //constructor a partir de un json
   factory Usuario.fromMap(Map<String,dynamic> map){
     List<dynamic> listRondas = map["rondas"];
     List<Ronda> rondas = listRondas.map((element) => Ronda.fromMapLite(element)).toList();
@@ -28,6 +28,7 @@ class Usuario {
         map['creacion'],rondas);
   }
 
+  //metodo para formar una lista dinamica de un usuario
   static Map<String, dynamic> toJson(Usuario value) =>
       {'mail': value.mail, 'nombre': value.nombre, 'password': value.password,
         'bloqueado': value.bloqueado, 'fecha': value.fecha, 'direccion': value.direccion,

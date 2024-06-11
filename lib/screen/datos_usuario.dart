@@ -13,6 +13,7 @@ import '../model/ronda.dart';
 
 const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
+//pantalla configuracion usuario
 class UserScreen extends StatefulWidget {
   Usuario usuario;
   UserScreen(this.usuario,{Key? key}) : super(key: key);
@@ -31,6 +32,7 @@ class _UserScreenState extends State<UserScreen> {
 
   _UserScreenState(this.usuario);
 
+  //widget para modificar nombre
   Widget _nombreInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -55,6 +57,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //widget para modificar fecha nacimiento
   Widget _fechaInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -83,6 +86,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //widget para modificar direcion
   Widget _direccionInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -107,6 +111,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //widget para modificar contraseña
   Widget _passwordInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -136,6 +141,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //boton de modificar usuario
   Widget _CambioButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -143,6 +149,7 @@ class _UserScreenState extends State<UserScreen> {
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Aplicar cambios', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          //metodo modificar usuario
           onPressed: () async{
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
@@ -164,6 +171,7 @@ class _UserScreenState extends State<UserScreen> {
                   SnackBar(content: Text(mensaje!, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
                 );
               }
+              //reflejar los datos en la app
               usuario.rondas = ronds;
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -175,6 +183,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //boton eliminar usuario
   Widget _DeleteButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -182,6 +191,7 @@ class _UserScreenState extends State<UserScreen> {
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Borrar Usuario', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          //metodo eliminar usuario
           onPressed: () async{
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Conectando... espera unos segundos', style: TextStyle(color: Colors.white,)),backgroundColor: Colors.orange),
@@ -193,8 +203,10 @@ class _UserScreenState extends State<UserScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('usuario borrado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
+                //se vuelve al login
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
               } else{
+                //reflejar los datos en la app
                 usuario.rondas = ronds;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(mensaje!, style: TextStyle(color: Colors.white,)),backgroundColor: Colors.red),
@@ -205,9 +217,11 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //se construye los widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //app bar con boton de regreso
       appBar: AppBar(title: const Text('Registro'),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade400,
@@ -218,6 +232,7 @@ class _UserScreenState extends State<UserScreen> {
         actions: [
           IconButton(
             onPressed: () {
+              //se vuelve a la lista de rondas
               Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
             },
             icon: Icon(Icons.arrow_back,color: Colors.white),
@@ -227,6 +242,7 @@ class _UserScreenState extends State<UserScreen> {
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
+          //formulario de modificar usuario
           Form(
               key: _formKey,
               child: Padding(
@@ -260,6 +276,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  //llamada a la api de modificar usuario
   Future<String?> modificarUsuario(Usuario usuario) async {
     final response = await http.post(
       Uri.parse(_link+'?action=putUsuario'),
@@ -272,13 +289,13 @@ class _UserScreenState extends State<UserScreen> {
               : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
+    //recibir respuesta
     if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
-      // If the server did return a 201 CREATED response,
-      // then parse the JSON.
       return json["mensaje"];
     } else if (response.statusCode == 302) {
       if (response.headers.containsKey("location")) {
+        //recibir respuesta desde la redirecion
         String? url = response.headers["location"];
         final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
         if (getResponse.statusCode == 200) {
@@ -290,12 +307,11 @@ class _UserScreenState extends State<UserScreen> {
         }
       }
     } else {
-      // If the server did not return a 201 CREATED response,
-      // then throw an exception.
       throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
   }
 
+  //llamada a la api de modificar usuario
   Future<String?> borrarUsuario(Usuario usuario) async {
     final response = await http.post(
       Uri.parse(_link+'?action=deleteUsuario&mail='+usuario.mail),
@@ -308,12 +324,12 @@ class _UserScreenState extends State<UserScreen> {
               : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
+    //recibir respuesta
     if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
-      // If the server did return a 201 CREATED response,
-      // then parse the JSON.
       return json["mensaje"];
     } else if (response.statusCode == 302) {
+      //recibir respuesta desde la redirecion
       if (response.headers.containsKey("location")) {
         String? url = response.headers["location"];
         final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
@@ -326,8 +342,6 @@ class _UserScreenState extends State<UserScreen> {
         }
       }
     } else {
-      // If the server did not return a 201 CREATED response,
-      // then throw an exception.
       throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
   }

@@ -1,6 +1,7 @@
 import 'package:adiapp/screen/login.dart';
 import 'package:flutter/material.dart';
 
+//arranque de la aplicacion
 void main() {
   runApp(MyApp());
 }

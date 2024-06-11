@@ -3,16 +3,18 @@ import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
 import 'crear_ronda.dart';
 import 'datos_ronda.dart';
-import 'ronda_part.dart';
 import 'datos_usuario.dart';
 
+//pantalla rondas de un usuario
 class UsuRondasScreen extends StatelessWidget {
   Usuario usuario;
   UsuRondasScreen(this.usuario,{Key? key}) : super(key: key);
 
+  //se construye los widgets
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //app bar con boton configuracion usuario y añadir ronda
         appBar: AppBar(
           title: Text('Rondas ' + usuario.nombre),
           automaticallyImplyLeading: false,
@@ -24,12 +26,14 @@ class UsuRondasScreen extends StatelessWidget {
           actions: [
             IconButton(
               onPressed: () {
+                //se va a configuracion usuario
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> UserScreen(usuario)));
               },
               icon: Icon(Icons.settings,color: Colors.white),
             ),
             IconButton(
               onPressed: () {
+                //se va a creacion ronda
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> CreaterRondaScreen(usuario)));
               },
               icon: Icon(Icons.add,color: Colors.white),
@@ -43,6 +47,7 @@ class UsuRondasScreen extends StatelessWidget {
   }
 }
 
+//lista de rondas
 class _RondasListView extends StatelessWidget {
   Usuario usuario;
   _RondasListView(this.usuario);
@@ -56,6 +61,7 @@ class _RondasListView extends StatelessWidget {
           _listItem(context,_data[index]),
     );
   }
+  //elemento de la lista de rondas
   Widget _listItem(BuildContext context, Ronda element){
     return Padding(
       padding: const EdgeInsets.all(10.0),

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
+//pantalla crear usuario
 class CreaterUserScreen extends StatefulWidget {
   const CreaterUserScreen({Key? key}) : super(key: key);
 
@@ -26,6 +27,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
   String _direccion = "";
   final _formKey = GlobalKey<FormState>();
 
+  //widget para meter el mail
   Widget _eMailInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -55,6 +57,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //widget para meter el nombre
   Widget _nombreInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -79,6 +82,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //widget para meter la fecha de nacimiento
   Widget _fechaInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -107,6 +111,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //widget para meter la direccion
   Widget _direccionInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -131,6 +136,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //widget para meter la contraseña
   Widget _passwordInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -160,6 +166,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //boton para crear el usuario
   Widget _creatingButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -167,6 +174,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Registrar', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          //metodo para crear el usuario
           onPressed: () async{
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
@@ -180,6 +188,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('usuario creado correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                 );
+                //se vuelve al login
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
               } else{
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -196,6 +205,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //boton de volver
   Widget _volverButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -204,15 +214,18 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('volver', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () {
+            //se vuelve al login
             Navigator.push(context, MaterialPageRoute(builder: (context)=> LoginScreen()));
           }
       ),
     );
   }
 
+  //se construye los widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //app bar
       appBar: AppBar(title: const Text('Registro'),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade400,
@@ -224,6 +237,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
+          //el formulario para crear el usuario
           Form(
               key: _formKey,
               child: Padding(
@@ -248,6 +262,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
+  //llamada a la api para crear el usuario
   Future<String?> crearUsuario(Usuario usuario) async {
     final response = await http.post(
       Uri.parse(_link+'?action=postUsuario'),
@@ -259,12 +274,12 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
               : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
+    //recibir respuesta
     if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
-      // If the server did return a 201 CREATED response,
-      // then parse the JSON.
       return json["mensaje"];
     } else if (response.statusCode == 302) {
+      //recibir respuesta desde la redirecion
       if (response.headers.containsKey("location")) {
         String? url = response.headers["location"];
         final getResponse = await http.get(Uri.parse((url == null) ? "" : url));

@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 
 const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
 
+//pantalla para crear una ronda
 class CreaterRondaScreen extends StatefulWidget {
   Usuario usuario;
   CreaterRondaScreen(this.usuario,{Key? key}) : super(key: key);
@@ -33,6 +34,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
   TextEditingController dateController = TextEditingController();
   _CreaterRondaScreenState(this.usuario);
 
+  //widget para poner el nombre
   Widget _nombreInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -57,6 +59,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //widget para poner la entrega
   Widget _entregaInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -81,8 +84,10 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //lista con los posibles tipos de la ronda
   List<String> listaDeOpciones = <String>["A","B","C","D","E","F","G"];
 
+  //widget para elegir el tipo
   Widget _tipoInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -119,6 +124,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //widget para poner el dinero a gastar
   Widget _dineroInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
@@ -147,33 +153,33 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //widget para elegir la fecha maxima
   Widget _fechaInput(){
     return Container(
       margin: EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
-        controller: dateController, //editing controller of this TextField
+        controller: dateController,
         decoration: const InputDecoration(
 
-            icon: Icon(Icons.calendar_today), //icon of text field
-            labelText: "Fecha maxima de entrega" //label text of field
+            icon: Icon(Icons.calendar_today),
+            labelText: "Fecha maxima de entrega"
         ),
-        readOnly: true,  // when true user cannot edit text
+        readOnly: true,
         onTap: () async {
+          //accion cuando se pulsa el widget, que es para elegir la fecha
           DateTime? pickedDate = await showDatePicker(
               context: context,
-              initialDate: DateTime.now(), //get today's date
-              firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
               lastDate: DateTime(2101)
           );
 
           if(pickedDate != null ){
-            print(pickedDate);  //get the picked date in the format => 2022-07-04 00:00:00.000
-            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate); // format date in required form here we use yyyy-MM-dd that means time is removed
-            print(formattedDate); //formatted date output using intl package =>  2022-07-04
-            //You can format date as per your need
+            print(pickedDate);String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate); // format date in required form here we use yyyy-MM-dd that means time is removed
+            print(formattedDate);
 
             setState(() {
-              dateController.text = formattedDate; //set foratted date to TextField value.
+              dateController.text = formattedDate;
             });
           }else{
             print("Fecha no seleccionada");
@@ -192,6 +198,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //boton para crear la ronda
   Widget _creatingButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -199,6 +206,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('Crear ronda', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
+          //metodo de crear la ronda
           onPressed: () async{
             if(_formKey.currentState!.validate()){
               ScaffoldMessenger.of(context).showSnackBar(
@@ -210,11 +218,13 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
               String? mensaje = await crearRonda(ronda);
               if(mensaje != null){
                 if(mensaje.substring(0,2) == "OK"){
+                  //reflejar los datos en la app
                   ronda.id = mensaje.substring(2);
                   usuario.rondas.add(ronda);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('ronda creada correctamente',style: TextStyle(color: Colors.white,)),backgroundColor: Colors.green),
                   );
+                  //se vuelve a la lista de rondas
                   Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
                 } else{
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -232,6 +242,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //boton para volver a la pantalla anterior
   Widget _volverButton(){
     return Container(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -240,15 +251,18 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade400),
           child: const Text('volver', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () {
+            //se vuelve a la lista de rondas
             Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
           }
       ),
     );
   }
 
+  //se construye los widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //app bar
       appBar: AppBar(title: const Text('Crear Ronda'),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade400,
@@ -257,6 +271,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
             fontStyle: FontStyle.italic,
             fontSize: 24),
       ),
+        //el formulario para crear la ronda
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
@@ -285,6 +300,7 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     );
   }
 
+  //llamada a la api para crear una ronda
   Future<String?> crearRonda(Ronda ronda) async {
     final response = await http.post(
       Uri.parse(_link+'?action=postRonda'),
@@ -297,12 +313,12 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
               : throw UnsupportedError('Cannot convert to JSON: $value')),
     );
 
+    //recibir respuesta
     if (response.statusCode == 200) {
       Map<String, dynamic> json = jsonDecode(response.body);
-      // If the server did return a 201 CREATED response,
-      // then parse the JSON.
       return json["mensaje"];
     } else if (response.statusCode == 302) {
+      //recibir respuesta desde la redirecion
       if (response.headers.containsKey("location")) {
         String? url = response.headers["location"];
         final getResponse = await http.get(Uri.parse((url == null) ? "" : url));
@@ -316,8 +332,6 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
 
       }
     } else {
-      // If the server did not return a 201 CREATED response,
-      // then throw an exception.
       throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
   }
