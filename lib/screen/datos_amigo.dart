@@ -7,14 +7,14 @@ import 'package:http/http.dart' as http;
 import '../model/datos_amigo.dart';
 import 'datos_ronda.dart';
 import 'ronda_part.dart';
-
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla de amigo de la ronda
 class AmigoScreen extends StatelessWidget {
   Usuario usuario;
   Ronda ronda;
   AmigoScreen(this.usuario,this.ronda,{Key? key}) : super(key: key);
+
 
   //se construye los widget
   @override
@@ -76,7 +76,7 @@ class _AmigoScreenState extends StatelessWidget {
   DatosAmigo datosAmigo;
   Usuario usuario;
   Ronda ronda;
-  _AmigoScreenState(this.datosAmigo,this.usuario,this.ronda);
+_AmigoScreenState(this.datosAmigo,this.usuario,this.ronda);
 
   //se construye la pantalla segun los datos recibidos
   @override

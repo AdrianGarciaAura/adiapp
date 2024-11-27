@@ -36,7 +36,7 @@ class UsuRondasScreen extends StatelessWidget {
                 //se va a creacion ronda
                 Navigator.push(context, MaterialPageRoute(builder: (context)=> CreaterRondaScreen(usuario)));
               },
-              icon: Icon(Icons.add,color: Colors.white),
+              icon: Icon(Icons.add_circle,color: Colors.white),
             ),
           ],
         ),

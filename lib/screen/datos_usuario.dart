@@ -8,10 +8,12 @@ import 'package:adiapp/screen/login.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
 
 import '../model/ronda.dart';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla configuracion usuario
 class UserScreen extends StatefulWidget {
@@ -27,8 +29,61 @@ class _UserScreenState extends State<UserScreen> {
   String _nombre = "";
   String _password = "";
   String _fecha = "";
-  String _direccion = "";
   final _formKey = GlobalKey<FormState>();
+  InterstitialAd? _interstitialAd;
+  final String _adUnitId = Platform.isAndroid ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-3940256099942544/4411468910';
+
+  BannerAd? _anchoredAdaptiveAd;
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadAdB();
+  }
+
+  Future<void> _loadAdB() async {
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.of(context).size.width.truncate());
+
+    if (size == null) {
+      print('Unable to get height of anchored banner.');
+      return;
+    }
+
+    _anchoredAdaptiveAd = BannerAd(
+      // TODO: replace these test ad units with your own ad unit.
+      adUnitId: Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$ad loaded: ${ad.responseInfo}');
+          setState(() {
+            // When the ad is loaded, get the ad size and use it to set
+            // the height of the ad container.
+            _anchoredAdaptiveAd = ad as BannerAd;
+            _isLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Anchored adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    return _anchoredAdaptiveAd!.load();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAd();
+  }
 
   _UserScreenState(this.usuario);
 
@@ -86,31 +141,6 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  //widget para modificar direcion
-  Widget _direccionInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: TextEditingController(text: usuario.direccion,),
-        decoration: InputDecoration(
-          labelText: 'Direccion',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Direccion vacio';
-          }
-          setState(()  {
-            _direccion = value;
-          });
-          return null;
-        },
-      ),
-    );
-  }
-
   //widget para modificar contraseña
   Widget _passwordInput(){
     return Container(
@@ -157,7 +187,6 @@ class _UserScreenState extends State<UserScreen> {
               );
               usuario.nombre = _nombre;
               usuario.fecha = _fecha;
-              usuario.direccion = _direccion;
               usuario.password ="Z"+_password;
               List<Ronda> ronds = usuario.rondas;
               usuario.rondas = [];
@@ -232,6 +261,7 @@ class _UserScreenState extends State<UserScreen> {
         actions: [
           IconButton(
             onPressed: () {
+              _interstitialAd?.show();
               //se vuelve a la lista de rondas
               Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
             },
@@ -239,41 +269,90 @@ class _UserScreenState extends State<UserScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: <Widget>[
-          //formulario de modificar usuario
-          Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    _nombreInput(),
-                    _fechaInput(),
-                    _direccionInput(),
-                    _passwordInput(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        Padding(
-                            padding: const EdgeInsets.only(right: 4.0),
-                            child: _CambioButton()
-                        ),
-                        Padding(
-                            padding: const EdgeInsets.only(left: 4.0, right: 4.0),
-                            child: _DeleteButton()
-                        ),
-                      ],
+      body: Center(
+        child: Stack(
+            alignment: AlignmentDirectional.bottomCenter,
+            children: <Widget>[
+              ListView(
+                padding: const EdgeInsets.all(8),
+                children: <Widget>[
+                  //formulario de modificar usuario
+                  Form(
+                    key: _formKey,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          _nombreInput(),
+                          _fechaInput(),
+                          _passwordInput(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4.0),
+                                child: _CambioButton()
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4.0, right: 4.0),
+                                child: _DeleteButton()
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
                     )
-                  ],
-                ),
-              )
-          ),
-        ],
-      )
+                  ),
+                ],
+              ),
+              if (_anchoredAdaptiveAd != null && _isLoaded)
+                Container(
+                  color: Colors.green,
+                  width: _anchoredAdaptiveAd!.size.width.toDouble(),
+                  height: _anchoredAdaptiveAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _anchoredAdaptiveAd!),
+                )
+            ],
+        ),
+      ),
     );
+  }
+
+  /// Loads an interstitial ad.
+  void _loadAd() async {
+
+    InterstitialAd.load(
+        adUnitId: _adUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          // Called when an ad is successfully received.
+          onAdLoaded: (InterstitialAd ad) {
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              // Called when the ad showed the full screen content.
+                onAdShowedFullScreenContent: (ad) {},
+                // Called when an impression occurs on the ad.
+                onAdImpression: (ad) {},
+                // Called when the ad failed to show full screen content.
+                onAdFailedToShowFullScreenContent: (ad, err) {
+                  ad.dispose();
+                },
+                // Called when the ad dismissed full screen content.
+                onAdDismissedFullScreenContent: (ad) {
+                  ad.dispose();
+                },
+                // Called when a click is recorded for an ad.
+                onAdClicked: (ad) {});
+
+            // Keep a reference to the ad so you can show it later.
+            _interstitialAd = ad;
+          },
+          // Called when an ad request failed.
+          onAdFailedToLoad: (LoadAdError error) {
+            // ignore: avoid_print
+            print('InterstitialAd failed to load: $error');
+          },
+        ));
   }
 
   //llamada a la api de modificar usuario
@@ -346,4 +425,9 @@ class _UserScreenState extends State<UserScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    _anchoredAdaptiveAd?.dispose();
+  }
 }

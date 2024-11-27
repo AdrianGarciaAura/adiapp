@@ -1,15 +1,13 @@
-import 'dart:ffi';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adiapp/model/usuario.dart';
 import 'package:adiapp/model/ronda.dart';
-import 'package:adiapp/model/amigo.dart';
 import 'package:adiapp/screen/login.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla crear usuario
 class CreaterUserScreen extends StatefulWidget {
@@ -24,8 +22,12 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
   String _nombre = "";
   String _password = "";
   String _fecha = "";
-  String _direccion = "";
   final _formKey = GlobalKey<FormState>();
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   //widget para meter el mail
   Widget _eMailInput(){
@@ -111,31 +113,6 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
     );
   }
 
-  //widget para meter la direccion
-  Widget _direccionInput(){
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Direccion',
-          hintText: 'Escribe tu direccion aqui',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-        validator: (value){
-          if(value == null || value.isEmpty){
-            return 'Direccion vacio';
-          }
-          setState(()  {
-            _direccion = value;
-          });
-          return null;
-        },
-      ),
-    );
-  }
-
   //widget para meter la contraseña
   Widget _passwordInput(){
     return Container(
@@ -182,7 +159,7 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
               );
               List<Ronda> rondas = [];
               Usuario usuario = Usuario(_mail,_nombre,
-                  "Z"+_password,"no",_fecha,_direccion,"",rondas);
+                  "Z"+_password,"no",_fecha,"anulado","",rondas);
               String? mensaje = await crearUsuario(usuario);
               if(mensaje == "OK"){
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -248,8 +225,29 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
                     _eMailInput(),
                     _nombreInput(),
                     _fechaInput(),
-                    _direccionInput(),
                     _passwordInput(),
+                    Text(overflow: TextOverflow.ellipsis, "-Consentimiento: Al crear un usuario en",style: TextStyle(color: Colors.teal, fontSize: 14.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "A.D.I Amigo distante invisible aceptas que:",style: TextStyle(color: Colors.teal, fontSize: 14.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Darnos los datos necesarios para el correcto funcionamiento de la app,",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "como el mail para poderte mandar los mails necesarios para las rondas",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "del amigo invisible o la dirección para que otros usuarios la fecha de",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "puedan mandarte el regalo. También se pide",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "nacimiento para futuras funcionalidades.",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Los datos se recogen en una base de datos segura en un servidor",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "de pago donde solo tiene acceso el autor de la aplicación.",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Política de privacidad:",style: TextStyle(color: Colors.teal, fontSize: 14.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "el autor se compromete a no usar o filtrar los datos aparte",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "de los necesarios para el correcto funcionamiento de la app.",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Términos de servicio:",style: TextStyle(color: Colors.teal, fontSize: 14.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Uso de anuncios: Los anuncios se usarán para mantener",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "la aplicación activa y se usara el sdk admob.",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Tipos de anuncios: Los anuncios serán banners y anuncios intersticiales",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "-Conducta del usuario: Los usuarios deben respetar los datos",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "proporcionados para realizar el amigo invisible y no hacer un mal",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "uso del sistema. Si algún usuario hace mal uso de los datos",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "que se le proporciona o de la misma aplicación, sera directamente",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "baneado de la aplicación y si las consecuencias son muy graves,",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
+                    Text(overflow: TextOverflow.ellipsis, "denunciado ante la ley.",style: TextStyle(color: Colors.teal, fontSize: 10.0,)),
                     _creatingButton(),
                     _volverButton()
                   ],
@@ -261,6 +259,8 @@ class _CreaterUserScreenState extends State<CreaterUserScreen> {
 
     );
   }
+
+
 
   //llamada a la api para crear el usuario
   Future<String?> crearUsuario(Usuario usuario) async {

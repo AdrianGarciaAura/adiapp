@@ -12,8 +12,10 @@ import '../model/datos_ronda.dart';
 import '../model/participante.dart';
 import 'datos_amigo.dart';
 import 'ronda_part.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla datos ronda
 class RondaScreen extends StatefulWidget {
@@ -35,6 +37,15 @@ class _RondaScreenState extends State<RondaScreen>  {
   String _dinero = "";
   String _fechaMaxima = "";
   final _formKey = GlobalKey<FormState>();
+  InterstitialAd? _interstitialAd;
+  final String _adUnitId = Platform.isAndroid ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-3940256099942544/4411468910';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAd();
+  }
+
   TextEditingController dateController = TextEditingController();
   _RondaScreenState(this.usuario,this.idRonda,this.nombreRonda);
 
@@ -54,6 +65,7 @@ class _RondaScreenState extends State<RondaScreen>  {
         actions: [
           IconButton(
             onPressed: () {
+              _interstitialAd?.show();
               //se vuelve a las rondas del usuario
               Navigator.push(context, MaterialPageRoute(builder: (context)=> UsuRondasScreen(usuario)));
             },
@@ -75,6 +87,42 @@ class _RondaScreenState extends State<RondaScreen>  {
         },
       ),
     );
+  }
+
+  /// Loads an interstitial ad.
+  void _loadAd() async {
+
+    InterstitialAd.load(
+        adUnitId: _adUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          // Called when an ad is successfully received.
+          onAdLoaded: (InterstitialAd ad) {
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              // Called when the ad showed the full screen content.
+                onAdShowedFullScreenContent: (ad) {},
+                // Called when an impression occurs on the ad.
+                onAdImpression: (ad) {},
+                // Called when the ad failed to show full screen content.
+                onAdFailedToShowFullScreenContent: (ad, err) {
+                  ad.dispose();
+                },
+                // Called when the ad dismissed full screen content.
+                onAdDismissedFullScreenContent: (ad) {
+                  ad.dispose();
+                },
+                // Called when a click is recorded for an ad.
+                onAdClicked: (ad) {});
+
+            // Keep a reference to the ad so you can show it later.
+            _interstitialAd = ad;
+          },
+          // Called when an ad request failed.
+          onAdFailedToLoad: (LoadAdError error) {
+            // ignore: avoid_print
+            print('InterstitialAd failed to load: $error');
+          },
+        ));
   }
 
   //llamada a la api para recibir una ronda
@@ -242,7 +290,7 @@ class _RondaScreenState extends State<RondaScreen>  {
   //botones de participantes, tambien esta el de amigo si se realizo el sorteo de la ronda
   Widget _botonesParticipantes(context,ronda){
     if(ronda.estado == "SorteoRealizado"){
-      return Row(
+      return Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           Padding(
@@ -252,6 +300,7 @@ class _RondaScreenState extends State<RondaScreen>  {
                 child: const Text('Datos Amigo', style: TextStyle(
                   color: Colors.white, fontSize: 15.0,)),
                 onPressed: () {
+                  _interstitialAd?.show();
                   //se va la pantalla de amigo de la ronda
                   Navigator.push(context, MaterialPageRoute(builder: (context)=> AmigoScreen(usuario,ronda)));
                 }
@@ -264,6 +313,7 @@ class _RondaScreenState extends State<RondaScreen>  {
                 child: const Text('Participantes', style: TextStyle(
                   color: Colors.white, fontSize: 15.0,)),
                 onPressed: () {
+                  _interstitialAd?.show();
                   //se va a la pantalla con los participantes de la ronda
                   Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaParticipanteScreen(usuario,ronda)));
                 }
@@ -276,6 +326,7 @@ class _RondaScreenState extends State<RondaScreen>  {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
           child: const Text('Participantes', style: TextStyle(color: Colors.white, fontSize: 15.0,)),
           onPressed: () {
+            _interstitialAd?.show();
             //se va a la pantalla con los participantes de la ronda
             Navigator.push(context, MaterialPageRoute(builder: (context)=> RondaParticipanteScreen(usuario,ronda)));
           }

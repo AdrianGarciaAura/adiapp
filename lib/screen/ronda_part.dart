@@ -4,6 +4,8 @@ import 'package:adiapp/model/ronda.dart';
 import '../model/participante.dart';
 import 'anyadir_participante.dart';
 import 'datos_ronda.dart';
+import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 //pantalla participantes ronda
 class RondaParticipanteScreen extends StatefulWidget {
@@ -19,6 +21,51 @@ class _RondaParticipanteScreenState extends State<RondaParticipanteScreen> {
   Usuario usuario;
   Ronda ronda;
   _RondaParticipanteScreenState(this.usuario, this.ronda);
+  BannerAd? _anchoredAdaptiveAd;
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadAd();
+  }
+
+  Future<void> _loadAd() async {
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.of(context).size.width.truncate());
+
+    if (size == null) {
+      print('Unable to get height of anchored banner.');
+      return;
+    }
+
+    _anchoredAdaptiveAd = BannerAd(
+      // TODO: replace these test ad units with your own ad unit.
+      adUnitId: Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$ad loaded: ${ad.responseInfo}');
+          setState(() {
+            // When the ad is loaded, get the ad size and use it to set
+            // the height of the ad container.
+            _anchoredAdaptiveAd = ad as BannerAd;
+            _isLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Anchored adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    return _anchoredAdaptiveAd!.load();
+  }
 
   //construcion widgets
   @override
@@ -46,10 +93,24 @@ class _RondaParticipanteScreenState extends State<RondaParticipanteScreen> {
           ],
         ),
         //lista participantes
-        body: ListView.builder(
-              itemCount: _data.length,
-              itemBuilder: (context, index) => _listItem(context, _data[index]),
-            ),
+        body: Center(
+          child: Stack(
+            alignment: AlignmentDirectional.bottomCenter,
+            children: <Widget>[
+              ListView.builder(
+                itemCount: _data.length,
+                itemBuilder: (context, index) => _listItem(context, _data[index]),
+              ),
+              if (_anchoredAdaptiveAd != null && _isLoaded)
+                Container(
+                  color: Colors.green,
+                  width: _anchoredAdaptiveAd!.size.width.toDouble(),
+                  height: _anchoredAdaptiveAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _anchoredAdaptiveAd!),
+                )
+            ],
+          ),
+        ),
     );
   }
 
@@ -61,7 +122,7 @@ class _RondaParticipanteScreenState extends State<RondaParticipanteScreen> {
           //se va a la pantalla de añadir participante
           Navigator.push(context, MaterialPageRoute(builder: (context)=> ParticipanteScreen(usuario,ronda)));
         },
-        icon: Icon(Icons.add,color: Colors.white),
+        icon: Icon(Icons.add_circle,color: Colors.white),
       );
     } else {
       return IconButton(
@@ -87,5 +148,11 @@ class _RondaParticipanteScreenState extends State<RondaParticipanteScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _anchoredAdaptiveAd?.dispose();
   }
 }

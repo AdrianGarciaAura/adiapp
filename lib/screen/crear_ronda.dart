@@ -9,8 +9,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla para crear una ronda
 class CreaterRondaScreen extends StatefulWidget {
@@ -33,6 +35,52 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController dateController = TextEditingController();
   _CreaterRondaScreenState(this.usuario);
+
+  BannerAd? _anchoredAdaptiveAd;
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadAd();
+  }
+
+  Future<void> _loadAd() async {
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.of(context).size.width.truncate());
+
+    if (size == null) {
+      print('Unable to get height of anchored banner.');
+      return;
+    }
+
+    _anchoredAdaptiveAd = BannerAd(
+      // TODO: replace these test ad units with your own ad unit.
+      adUnitId: Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$ad loaded: ${ad.responseInfo}');
+          setState(() {
+            // When the ad is loaded, get the ad size and use it to set
+            // the height of the ad container.
+            _anchoredAdaptiveAd = ad as BannerAd;
+            _isLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Anchored adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    return _anchoredAdaptiveAd!.load();
+  }
 
   //widget para poner el nombre
   Widget _nombreInput(){
@@ -272,31 +320,44 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
             fontSize: 24),
       ),
         //el formulario para crear la ronda
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: <Widget>[
-          Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    _nombreInput(),
-                    _tipoInput(),
-                    _dineroInput(),
-                    _entregaInput(),
-                    Text(overflow: TextOverflow.ellipsis, 'Fecha entrega maxima',style: TextStyle(color: Colors.blue.shade400, fontSize: 10.0,)),
-                    _fechaInput(),
-                    _creatingButton(),
-                    _volverButton()
-                  ],
-                ),
-              )
-          ),
-        ],
-      )
-
+      body: Center(
+        child: Stack(
+            alignment: AlignmentDirectional.bottomCenter,
+            children: <Widget>[
+              ListView(
+                padding: const EdgeInsets.all(8),
+                children: <Widget>[
+                  Form(
+                    key: _formKey,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          _nombreInput(),
+                          _tipoInput(),
+                          _dineroInput(),
+                          _entregaInput(),
+                          Text(overflow: TextOverflow.ellipsis, 'Fecha entrega maxima',style: TextStyle(color: Colors.blue.shade400, fontSize: 10.0,)),
+                          _fechaInput(),
+                          _creatingButton(),
+                          _volverButton()
+                        ],
+                      ),
+                    )
+                  ),
+                ],
+              ),
+              if (_anchoredAdaptiveAd != null && _isLoaded)
+                Container(
+                  color: Colors.green,
+                  width: _anchoredAdaptiveAd!.size.width.toDouble(),
+                  height: _anchoredAdaptiveAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _anchoredAdaptiveAd!),
+                )
+            ],
+        ),
+      ),
     );
   }
 
@@ -334,6 +395,12 @@ class _CreaterRondaScreenState extends State<CreaterRondaScreen> {
     } else {
       throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _anchoredAdaptiveAd?.dispose();
   }
 
 }

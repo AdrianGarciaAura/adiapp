@@ -40,6 +40,8 @@ dependencies:
 
   http: ^0.13.5
 
+  google_mobile_ads: ^5.2.0
+
 
 dev_dependencies:
   flutter_test:

@@ -6,8 +6,10 @@ import 'package:http/http.dart' as http;
 import '../model/partCompleto.dart';
 import '../model/participante.dart';
 import 'ronda_part.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla para añadir o quitar participantes
 class ParticipanteScreen extends StatefulWidget {
@@ -25,6 +27,56 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
   String _mail = "";
   String _nombre = "";
   final _formKey = GlobalKey<FormState>();
+  BannerAd? _anchoredAdaptiveAd;
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadAdB();
+  }
+
+  Future<void> _loadAdB() async {
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.of(context).size.width.truncate());
+
+    if (size == null) {
+      print('Unable to get height of anchored banner.');
+      return;
+    }
+
+    _anchoredAdaptiveAd = BannerAd(
+      // TODO: replace these test ad units with your own ad unit.
+      adUnitId: Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$ad loaded: ${ad.responseInfo}');
+          setState(() {
+            // When the ad is loaded, get the ad size and use it to set
+            // the height of the ad container.
+            _anchoredAdaptiveAd = ad as BannerAd;
+            _isLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Anchored adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    return _anchoredAdaptiveAd!.load();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   _ParticipanteScreenState(this.usuario, this.ronda);
 
@@ -53,26 +105,40 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
           ],
         ),
         //el formulario para añadir o quitar participantes
-        body: ListView(
-          padding: const EdgeInsets.all(8),
-          children: <Widget>[
-            Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      _nombreInput(),
-                      _eMailInput(),
-                      Text(overflow: TextOverflow.ellipsis, 'Pon datos particicipantes para:',style: TextStyle(color: Colors.blue.shade400, fontSize: 20.0,)),
-                      _botones(context),
-                    ],
-                  ),
-                )
-            ),
-          ],
-        )
+        body: Center(
+          child: Stack(
+              alignment: AlignmentDirectional.bottomCenter,
+              children: <Widget>[
+                ListView(
+                  padding: const EdgeInsets.all(8),
+                  children: <Widget>[
+                    Form(
+                      key: _formKey,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            _nombreInput(),
+                            _eMailInput(),
+                            Text(overflow: TextOverflow.ellipsis, 'Pon datos particicipantes para:',style: TextStyle(color: Colors.blue.shade400, fontSize: 20.0,)),
+                            _botones(context),
+                          ],
+                        ),
+                      )
+                    ),
+                  ],
+                ),
+                if (_anchoredAdaptiveAd != null && _isLoaded)
+                  Container(
+                    color: Colors.green,
+                    width: _anchoredAdaptiveAd!.size.width.toDouble(),
+                    height: _anchoredAdaptiveAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _anchoredAdaptiveAd!),
+                  )
+              ],
+          ),
+        ),
     );
   }
 
@@ -286,5 +352,11 @@ class _ParticipanteScreenState extends State<ParticipanteScreen> {
     } else {
       throw Exception('Fallo al acceder a la api'+response.statusCode.toString());
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _anchoredAdaptiveAd?.dispose();
   }
 }

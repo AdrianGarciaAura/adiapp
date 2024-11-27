@@ -6,7 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-const String _link = 'https://script.google.com/macros/s/AKfycbxXxRI_y1l6lPxXHfBURrQJbVE3pVbV81JgYwRFd8R8cprgfjAQlOM0Tj9n52Fuoe8k/exec';
+import 'consent_manager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
+
+const String _link = 'https://script.google.com/macros/s/AKfycbw0QgK5Ijo619D_4lFOM0o7I9_2xJqeYfjs53P6NM8soTSwcOEHYtVVQjigejqUMdawrQ/exec';
 
 //pantalla login
 class LoginScreen extends StatefulWidget {
@@ -19,7 +23,71 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _user = "";
   String _password = "";
+  var _isMobileAdsInitializeCalled = false;
+  var _isPrivacyOptionsRequired = false;
   final _formKey = GlobalKey<FormState>();
+  final _consentManager = ConsentManager();
+  InterstitialAd? _interstitialAd;
+  final String _adUnitId = Platform.isAndroid ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-3940256099942544/4411468910';
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    _consentManager.gatherConsent((consentGatheringError) {
+      if (consentGatheringError != null) {
+        // Consent not obtained in current session.
+        debugPrint(
+            "${consentGatheringError.errorCode}: ${consentGatheringError.message}");
+      }
+
+      // Check if a privacy options entry point is required.
+      _getIsPrivacyOptionsRequired();
+
+      // Attempt to initialize the Mobile Ads SDK.
+      _initializeMobileAdsSDK();
+    });
+
+    // This sample attempts to load ads using consent obtained in the previous session.
+    _initializeMobileAdsSDK();
+  }
+
+  /// Loads an interstitial ad.
+  void _loadAd() async {
+
+    InterstitialAd.load(
+        adUnitId: _adUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          // Called when an ad is successfully received.
+          onAdLoaded: (InterstitialAd ad) {
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              // Called when the ad showed the full screen content.
+                onAdShowedFullScreenContent: (ad) {},
+                // Called when an impression occurs on the ad.
+                onAdImpression: (ad) {},
+                // Called when the ad failed to show full screen content.
+                onAdFailedToShowFullScreenContent: (ad, err) {
+                  ad.dispose();
+                },
+                // Called when the ad dismissed full screen content.
+                onAdDismissedFullScreenContent: (ad) {
+                  ad.dispose();
+                },
+                // Called when a click is recorded for an ad.
+                onAdClicked: (ad) {});
+
+            // Keep a reference to the ad so you can show it later.
+            _interstitialAd = ad;
+          },
+          // Called when an ad request failed.
+          onAdFailedToLoad: (LoadAdError error) {
+            // ignore: avoid_print
+            print('InterstitialAd failed to load: $error');
+          },
+        ));
+  }
 
   //widget para meter mail
   Widget _eMailInput(){
@@ -92,6 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               DatosUsuario datos = await login(_user,_password);
               if(datos.mensaje == "ok"){
+                _interstitialAd?.show();
                 //se va a las rondas del usuario
                 Navigator.push(context,MaterialPageRoute(builder: (context) => UsuRondasScreen(datos.dato)));
               } else{
@@ -182,6 +251,31 @@ class _LoginScreenState extends State<LoginScreen> {
       return DatosUsuario.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Fallo al acceder a la api');
+    }
+  }
+
+  /// Redraw the app bar actions if a privacy options entry point is required.
+  void _getIsPrivacyOptionsRequired() async {
+    if (await _consentManager.isPrivacyOptionsRequired()) {
+      setState(() {
+        _isPrivacyOptionsRequired = true;
+      });
+    }
+  }
+
+  /// Initialize the Mobile Ads SDK if the SDK has gathered consent aligned with
+  /// the app's configured messages.
+  void _initializeMobileAdsSDK() async {
+    if (_isMobileAdsInitializeCalled) {
+      return;
+    }
+
+    if (await _consentManager.canRequestAds()) {
+      _isMobileAdsInitializeCalled = true;
+
+      // Initialize the Mobile Ads SDK.
+      MobileAds.instance.initialize();
+      _loadAd();
     }
   }
 
